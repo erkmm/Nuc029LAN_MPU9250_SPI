@@ -47,8 +47,8 @@ int main(void)
     /* Init SPI */
     SPI_Init();
 
-    int16_t accel_data;
-    uint8_t imu_data[14];
+    int16_t accel_dataX, accel_dataY, accel_dataZ;
+    uint8_t imu_data[6];
     mpu9250_write_reg(28, 0x08);
 
     /* Set TX FIFO threshold, enable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
@@ -59,10 +59,14 @@ int main(void)
 
     while (1)
      {
-   		  mpu9250_read_reg(59, imu_data, sizeof(imu_data));
-   		  accel_data = ((int16_t)imu_data[0]<<8) + imu_data[1];
-   		  printf("data is : %d \n",accel_data);
-   		  for(volatile int time=0; time< 0x100000; time++){}
+		mpu9250_read_reg(59, imu_data, sizeof(imu_data));
+		accel_dataX = ((int16_t) imu_data[0] << 8) + imu_data[1];
+		printf("\n accx: %d    ", accel_dataX);
+		accel_dataY = ((int16_t) imu_data[2] << 8) + imu_data[3];
+		printf("accy: %d    ", accel_dataY);
+		accel_dataZ = ((int16_t) imu_data[4] << 8) + imu_data[5];
+		printf("accz: %d ", accel_dataZ);
+   		for(volatile int time=0; time< 0x50000; time++){}
      }
     /* Disable TX FIFO threshold interrupt and RX FIFO time-out interrupt */
     SPI0->FIFO_CTL = 0;
@@ -73,7 +77,6 @@ int main(void)
 
     /* Disable SPI0 peripheral clock */
     CLK->APBCLK &= (~CLK_APBCLK_SPI0_EN_Msk);
-
 }
 
 void SYS_Init(void)
@@ -275,7 +278,6 @@ void mpu9250_read_reg(uint8_t reg, uint8_t *data, uint8_t len) {
 		SPI0->TX0 = 0x00;
 		SPI0->CNTRL |= SPI_CNTRL_GO_BUSY_Msk;
 		while (SPI0->CNTRL & SPI_CNTRL_GO_BUSY_Msk) {}
-
 		data[count] = SPI0->RX0;
 	}
 
